@@ -1,7 +1,7 @@
 # Fermale
 
 <p align="center">
-  <img src="assets/logo.jpg" alt="logo" width="200px"/>
+  <img src="assets/logo.jpg" alt="logo" width="71px"/>
 </p>
 
 Fermale (which stands for **fer**mionic systems for **ma**chine **le**arning) is an exploratory project for testing ways in which fermionic systems can be applied to solve machine learning problems.
