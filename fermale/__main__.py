@@ -1,8 +1,12 @@
+import os
+
 import click
-from openfermion import FermionOperator as FermionOperator_, jordan_wigner, eigenspectrum, bravyi_kitaev, reverse_jordan_wigner
+import numpy as np
+from openfermion import FermionOperator as FermionOperator_, jordan_wigner, eigenspectrum, bravyi_kitaev, reverse_jordan_wigner, fermi_hubbard, get_sparse_operator, get_ground_state
 from openfermion import count_qubits, commutator, hermitian_conjugated
 
 from fermale.FermionOperator import FermionOperator, QubitOperator
+from fermale.plots import draw_plot
 from fermale.utils import describe_result
 
 
@@ -92,6 +96,127 @@ def test_operators_initialization(coefficient: float):
     print('Eigenspectrum of the obtained operator:')
     print(eigenspectrum(bk_operator))
     print()
+
+
+@main.command()
+@click.option('-x', '--abscissa', type=int, default=2)
+@click.option('-y', '--ordinate', type=int, default=2)
+@click.option('-t', '--tunneling', type=float, default=2.)
+@click.option('-c', '--coulomb', type=float, default=1.)
+@click.option('-m', '--magnetic-field', type=float, default=0.5)
+@click.option('-p', '--chemical-potential', type=float, default=0.25)
+@click.option('-l', '--periodic', is_flag=True)
+@click.option('-s', '--spinless', is_flag=True)
+@click.option('-m', '--symmetry', is_flag=True)
+def test_hubbard_model(abscissa: int, ordinate: int, tunneling: float, coulomb: float, magnetic_field: float, chemical_potential: float, periodic: bool, spinless: bool, symmetry: bool):
+    hubbard_operator = fermi_hubbard(
+        x_dimension=abscissa,
+        y_dimension=ordinate,
+        tunneling=tunneling,
+        coulomb=coulomb,
+        chemical_potential=chemical_potential,
+        magnetic_field=magnetic_field,
+        periodic=periodic,
+        spinless=spinless,
+        particle_hole_symmetry=symmetry
+    )
+    # print(hubbard_operator)
+    jw_hamiltonian = jordan_wigner(hubbard_operator)
+    print('Jordan-Wigner hamiltonian without compression: ')
+    print(jw_hamiltonian)
+    print()
+    jw_hamiltonian.compress()
+    print('Jordan-Wigner hamiltonian with compression: ')
+    print(jw_hamiltonian)
+    print()
+    sparse_operator = get_sparse_operator(hubbard_operator)
+    print('Sparse operator')
+    print(sparse_operator)
+    print()
+    print(f'Energy of the model is {get_ground_state(sparse_operator)[0]} in units of T and J')
+
+    # xs = range(1, 9)
+    # energy_levels = [
+    #     get_ground_state(
+    #         get_sparse_operator(
+    #             fermi_hubbard(
+    #                 x_dimension=x,
+    #                 y_dimension=ordinate,
+    #                 tunneling=tunneling,
+    #                 coulomb=coulomb,
+    #                 chemical_potential=chemical_potential,
+    #                 magnetic_field=magnetic_field,
+    #                 periodic=periodic,
+    #                 spinless=spinless,
+    #                 particle_hole_symmetry=symmetry
+    #             )
+    #         )
+    #     )[0]
+    #     for x in xs
+    # ]
+    #
+    # os.makedirs('assets/hubbard', exist_ok=True)
+    #
+    # draw_plot(
+    #     xs, energy_levels,
+    #     x_label='X coordinate',
+    #     y_label='Ground state energy in units of T and J',
+    #     title='Ground state energy of the Hubbard model',
+    #     path='assets/hubbard/x.jpeg'
+    # )
+    #
+    # energy_levels = [
+    #     get_ground_state(
+    #         get_sparse_operator(
+    #             fermi_hubbard(
+    #                 x_dimension=abscissa,
+    #                 y_dimension=x,
+    #                 tunneling=tunneling,
+    #                 coulomb=coulomb,
+    #                 chemical_potential=chemical_potential,
+    #                 magnetic_field=magnetic_field,
+    #                 periodic=periodic,
+    #                 spinless=spinless,
+    #                 particle_hole_symmetry=symmetry
+    #             )
+    #         )
+    #     )[0]
+    #     for x in xs
+    # ]
+    # draw_plot(
+    #     xs, energy_levels,
+    #     x_label='Y coordinate',
+    #     y_label='Ground state energy in units of T and J',
+    #     title='Ground state energy of the Hubbard model',
+    #     path='assets/hubbard/y.jpeg'
+    # )
+
+    ts = np.arange(0, 4, 0.2)
+    energy_levels = [
+        get_ground_state(
+            get_sparse_operator(
+                fermi_hubbard(
+                    x_dimension=abscissa,
+                    y_dimension=ordinate,
+                    tunneling=t,
+                    coulomb=coulomb,
+                    chemical_potential=chemical_potential,
+                    magnetic_field=magnetic_field,
+                    periodic=periodic,
+                    spinless=spinless,
+                    particle_hole_symmetry=symmetry
+                )
+            )
+        )[0]
+        for t in ts
+    ]
+    draw_plot(
+        ts, energy_levels,
+        x_label='Tunneling coefficient',
+        y_label='Ground state energy in units of T and J',
+        title='Ground state energy of the Hubbard model',
+        path='assets/hubbard/t.jpeg'
+    )
 
 
 if __name__ == '__main__':

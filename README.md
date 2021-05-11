@@ -21,3 +21,9 @@ To run supported commands active the environment created on setup and execute de
 ```sh
 python -m fermale test-operators-initialization -c 1.7
 ```
+
+## Some results
+
+![energy levels of the hubbard model decrease linearly when x increases](assets/hubbard/x.jpeg)
+![energy levels of the hubbard model decrease linearly when y increases](assets/hubbard/y.jpeg)
+![energy levels of the hubbard model decrease linearly when tunneling coefficient increases](assets/hubbard/t.jpeg)
